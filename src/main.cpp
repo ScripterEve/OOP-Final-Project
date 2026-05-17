@@ -11,21 +11,25 @@ private:
   double quantity;
   string unit;
   double calories;
+  double protein;
+  double carbs;
+  double fat;
 
 public:
-  Ingredient(string n, double q, string u, double cal = 0)
-      : name(n), quantity(q), unit(u), calories(cal) {}
+  Ingredient(string n, double q, string u, double cal = 0, double p = 0, double c = 0, double f = 0)
+      : name(n), quantity(q), unit(u), calories(cal), protein(p), carbs(c), fat(f) {}
 
   string getName() { return name; }
   double getQuantity() { return quantity; }
   string getUnit() { return unit; }
   double getCalories() { return calories; }
-
-  void setQuantity(double q) { quantity = q; }
-  void setCalories(double c) { calories = c; }
+  double getProtein() { return protein; }
+  double getCarbs() { return carbs; }
+  double getFat() { return fat; }
 
   Ingredient scale(double factor) {
-    return Ingredient(name, quantity * factor, unit, calories * factor);
+    return Ingredient(name, quantity * factor, unit, calories * factor,
+                      protein * factor, carbs * factor, fat * factor);
   }
 
   void display() {
@@ -134,6 +138,27 @@ public:
     return total;
   }
 
+  double getTotalProtein() {
+    double total = 0;
+    for (int i = 0; i < ingredients.size(); i++)
+      total += ingredients[i].getProtein();
+    return total;
+  }
+
+  double getTotalCarbs() {
+    double total = 0;
+    for (int i = 0; i < ingredients.size(); i++)
+      total += ingredients[i].getCarbs();
+    return total;
+  }
+
+  double getTotalFat() {
+    double total = 0;
+    for (int i = 0; i < ingredients.size(); i++)
+      total += ingredients[i].getFat();
+    return total;
+  }
+
   void display() override {
     cout << "==========================================" << endl;
     cout << "  " << name;
@@ -160,7 +185,11 @@ public:
     cout << endl << "Steps:" << endl;
     for (int i = 0; i < steps.size(); i++)
       cout << "  " << (i + 1) << ". " << steps[i] << endl;
-    cout << "Total calories: " << getTotalCalories() << " kcal" << endl;
+    cout << endl << "Nutrition info:" << endl;
+    cout << "  Calories: " << getTotalCalories() << " kcal" << endl;
+    cout << "  Protein: " << getTotalProtein() << " g" << endl;
+    cout << "  Carbs: " << getTotalCarbs() << " g" << endl;
+    cout << "  Fat: " << getTotalFat() << " g" << endl;
     cout << "==========================================" << endl;
   }
 
@@ -343,7 +372,7 @@ public:
       vector<Ingredient> ings = recipes[i].getIngredients();
       file << ings.size() << endl;
       for (int j = 0; j < ings.size(); j++)
-        file << ings[j].getName() << "|" << ings[j].getQuantity() << "|" << ings[j].getUnit() << "|" << ings[j].getCalories() << endl;
+        file << ings[j].getName() << "|" << ings[j].getQuantity() << "|" << ings[j].getUnit() << "|" << ings[j].getCalories() << "|" << ings[j].getProtein() << "|" << ings[j].getCarbs() << "|" << ings[j].getFat() << endl;
       vector<string> steps = recipes[i].getSteps();
       file << steps.size() << endl;
       for (int j = 0; j < steps.size(); j++) file << steps[j] << endl;
@@ -380,15 +409,21 @@ public:
         string ingLine;
         getline(file, ingLine);
         string iname, unit;
-        double qty, cal;
+        double qty, cal, prot = 0, carb = 0, ft = 0;
         int p1 = ingLine.find('|');
         int p2 = ingLine.find('|', p1+1);
         int p3 = ingLine.find('|', p2+1);
+        int p4 = ingLine.find('|', p3+1);
+        int p5 = ingLine.find('|', p4+1);
+        int p6 = ingLine.find('|', p5+1);
         iname = ingLine.substr(0, p1);
         qty = stod(ingLine.substr(p1+1, p2-p1-1));
         unit = ingLine.substr(p2+1, p3-p2-1);
-        cal = stod(ingLine.substr(p3+1));
-        r.addIngredient(Ingredient(iname, qty, unit, cal));
+        cal = stod(ingLine.substr(p3+1, p4-p3-1));
+        if (p4 != (int)string::npos) prot = stod(ingLine.substr(p4+1, p5-p4-1));
+        if (p5 != (int)string::npos) carb = stod(ingLine.substr(p5+1, p6-p5-1));
+        if (p6 != (int)string::npos) ft = stod(ingLine.substr(p6+1));
+        r.addIngredient(Ingredient(iname, qty, unit, cal, prot, carb, ft));
       }
       int stepCount;
       file >> stepCount; file.ignore();
@@ -426,9 +461,9 @@ int main() {
 
   if (mgr.getCount() == 0) {
     Recipe r1("Shopska salad", 4, "salad");
-    r1.addIngredient(Ingredient("tomatoes", 4, "pcs", 22));
-    r1.addIngredient(Ingredient("cucumbers", 2, "pcs", 16));
-    r1.addIngredient(Ingredient("cheese", 200, "g", 264));
+    r1.addIngredient(Ingredient("tomatoes", 4, "pcs", 22, 1.1, 4.8, 0.2));
+    r1.addIngredient(Ingredient("cucumbers", 2, "pcs", 16, 0.7, 3.6, 0.1));
+    r1.addIngredient(Ingredient("cheese", 200, "g", 264, 17.5, 1.3, 21.3));
     r1.addStep("Chop the tomatoes and cucumbers");
     r1.addStep("Add cheese on top");
     r1.addTag("vegetarian");
@@ -437,9 +472,9 @@ int main() {
     mgr.addRecipe(r1);
 
     Recipe r2("Chicken with rice", 2, "main");
-    r2.addIngredient(Ingredient("chicken breast", 400, "g", 440));
-    r2.addIngredient(Ingredient("rice", 200, "g", 260));
-    r2.addIngredient(Ingredient("butter", 30, "g", 215));
+    r2.addIngredient(Ingredient("chicken breast", 400, "g", 440, 92, 0, 4));
+    r2.addIngredient(Ingredient("rice", 200, "g", 260, 5.3, 56, 0.6));
+    r2.addIngredient(Ingredient("butter", 30, "g", 215, 0.1, 0, 24));
     r2.addStep("Boil the rice");
     r2.addStep("Fry the chicken");
     r2.addStep("Mix and serve");
@@ -448,8 +483,8 @@ int main() {
     mgr.addRecipe(r2);
 
     Recipe r3("Banana smoothie", 1, "drink");
-    r3.addIngredient(Ingredient("bananas", 2, "pcs", 178));
-    r3.addIngredient(Ingredient("milk", 300, "ml", 186));
+    r3.addIngredient(Ingredient("bananas", 2, "pcs", 178, 2.2, 46, 0.6));
+    r3.addIngredient(Ingredient("milk", 300, "ml", 186, 10.2, 14.4, 9.6));
     r3.addStep("Peel the bananas");
     r3.addStep("Blend everything");
     r3.addTag("vegetarian");
@@ -542,7 +577,10 @@ int main() {
         double qty = readDouble("  Quantity: ");
         cout << "  Unit: "; getline(cin, unit);
         double cal = readDouble("  Calories: ");
-        r.addIngredient(Ingredient(iname, qty, unit, cal));
+        double prot = readDouble("  Protein (g): ");
+        double carb = readDouble("  Carbs (g): ");
+        double ft = readDouble("  Fat (g): ");
+        r.addIngredient(Ingredient(iname, qty, unit, cal, prot, carb, ft));
       }
 
       int ns = readInt("How many steps? ");
