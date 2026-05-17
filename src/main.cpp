@@ -279,6 +279,55 @@ public:
     }
     return sorted;
   }
+
+  void displayStats() {
+    cout << "==========================================" << endl;
+    cout << "           STATISTICS" << endl;
+    cout << "==========================================" << endl;
+    cout << "Total recipes: " << recipes.size() << endl;
+
+    cout << endl << "By category:" << endl;
+    vector<string> cats;
+    vector<int> catCounts;
+    for (int i = 0; i < recipes.size(); i++) {
+      string c = recipes[i].getCategory();
+      bool found = false;
+      for (int j = 0; j < cats.size(); j++) {
+        if (cats[j] == c) { catCounts[j]++; found = true; break; }
+      }
+      if (!found) { cats.push_back(c); catCounts.push_back(1); }
+    }
+    for (int i = 0; i < cats.size(); i++)
+      cout << "  " << cats[i] << ": " << catCounts[i] << endl;
+
+    double totalRating = 0;
+    int rated = 0;
+    for (int i = 0; i < recipes.size(); i++) {
+      if (recipes[i].getRating() > 0) {
+        totalRating += recipes[i].getRating();
+        rated++;
+      }
+    }
+    if (rated > 0)
+      cout << endl << "Average rating: " << (totalRating / rated) << "/5" << endl;
+
+    int favs = 0;
+    for (int i = 0; i < recipes.size(); i++)
+      if (recipes[i].isFavorite()) favs++;
+    cout << "Favorites: " << favs << endl;
+
+    if (rated > 0) {
+      cout << endl << "Top rated:" << endl;
+      vector<Recipe> top = getByRating();
+      int show = 3;
+      if ((int)top.size() < show) show = top.size();
+      for (int i = 0; i < show; i++) {
+        if (top[i].getRating() > 0)
+          cout << "  " << top[i].getName() << " - " << top[i].getRating() << "/5" << endl;
+      }
+    }
+    cout << "==========================================" << endl;
+  }
   void saveToFile(string filename) {
     ofstream file(filename);
     for (int i = 0; i < recipes.size(); i++) {
@@ -463,6 +512,7 @@ int main() {
     cout << "12. View favorites" << endl;
     cout << "13. Sort by rating" << endl;
     cout << "14. Export recipe to file" << endl;
+    cout << "15. Statistics" << endl;
     cout << " 0. Exit" << endl;
     cout << "==========================================" << endl;
     cout << "Choice: ";
@@ -579,6 +629,9 @@ int main() {
         cout << "Filename: "; getline(cin, fname);
         r->exportToFile(fname);
       } else cout << "Not found." << endl;
+
+    } else if (choice == 15) {
+      mgr.displayStats();
 
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;
