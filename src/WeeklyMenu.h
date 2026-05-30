@@ -26,6 +26,7 @@ public:
   int getDaysCount();
 
   void displayWeeklyPlan();
+  void generateShoppingList();
   void clearDay(string day);
   void clearAll();
 };

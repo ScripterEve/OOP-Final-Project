@@ -122,6 +122,7 @@ int main() {
     cout << "15. Statistics" << endl;
     cout << "16. Plan weekly menu" << endl;
     cout << "17. View weekly plan" << endl;
+    cout << "18. Generate shopping list" << endl;
     cout << " 0. Exit" << endl;
     cout << "==========================================" << endl;
     cout << "Choice: ";
@@ -277,6 +278,9 @@ int main() {
 
     } else if (choice == 17) {
       menu.displayWeeklyPlan();
+
+    } else if (choice == 18) {
+      menu.generateShoppingList();
 
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;
