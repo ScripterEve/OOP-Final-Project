@@ -3,91 +3,10 @@
 #include <string>
 #include <vector>
 
+#include "Ingredient.h"
+#include "RecipeBase.h"
+
 using namespace std;
-
-class Ingredient {
-private:
-  string name;
-  double quantity;
-  string unit;
-  double calories;
-  double protein;
-  double carbs;
-  double fat;
-
-public:
-  Ingredient(string n, double q, string u, double cal = 0, double p = 0, double c = 0, double f = 0)
-      : name(n), quantity(q), unit(u), calories(cal), protein(p), carbs(c), fat(f) {}
-
-  string getName() { return name; }
-  double getQuantity() { return quantity; }
-  string getUnit() { return unit; }
-  double getCalories() { return calories; }
-  double getProtein() { return protein; }
-  double getCarbs() { return carbs; }
-  double getFat() { return fat; }
-
-  Ingredient scale(double factor) {
-    return Ingredient(name, quantity * factor, unit, calories * factor,
-                      protein * factor, carbs * factor, fat * factor);
-  }
-
-  void display() {
-    cout << "  - " << name << ": " << quantity << " " << unit;
-    if (calories > 0)
-      cout << " (" << calories << " kcal)";
-    cout << endl;
-  }
-};
-
-class RecipeBase {
-protected:
-  string name;
-  int servings;
-  string category;
-  vector<string> tags;
-  bool favorite;
-  int rating;
-
-public:
-  RecipeBase(string n, int s, string c)
-      : name(n), servings(s), category(c), favorite(false), rating(0) {}
-  virtual ~RecipeBase() {}
-
-  string getName() { return name; }
-  int getServings() { return servings; }
-  string getCategory() { return category; }
-  vector<string> getTags() { return tags; }
-  bool isFavorite() { return favorite; }
-  int getRating() { return rating; }
-
-  void setName(string n) { name = n; }
-  void setCategory(string c) { category = c; }
-  void setServings(int s) {
-    if (s > 0)
-      servings = s;
-  }
-  void setRating(int r) {
-    if (r >= 1 && r <= 5)
-      rating = r;
-  }
-  void toggleFavorite() { favorite = !favorite; }
-
-  void addTag(string tag) {
-    if (!hasTag(tag))
-      tags.push_back(tag);
-  }
-
-  bool hasTag(string tag) {
-    for (int i = 0; i < tags.size(); i++) {
-      if (tags[i] == tag)
-        return true;
-    }
-    return false;
-  }
-
-  virtual void display() = 0;
-};
 
 class Recipe : public RecipeBase {
 private:
