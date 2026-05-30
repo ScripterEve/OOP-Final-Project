@@ -6,6 +6,7 @@
 #include "Recipe.h"
 #include "RecipeManager.h"
 #include "WeeklyMenu.h"
+#include "Pantry.h"
 
 using namespace std;
 
@@ -28,6 +29,7 @@ void displayList(vector<Recipe> list) {
 int main() {
   RecipeManager mgr;
   WeeklyMenu menu;
+  Pantry pantry;
   string dataFile = "recipes.txt";
   mgr.loadFromFile(dataFile);
 
@@ -123,6 +125,9 @@ int main() {
     cout << "16. Plan weekly menu" << endl;
     cout << "17. View weekly plan" << endl;
     cout << "18. Generate shopping list" << endl;
+    cout << "19. Add to pantry" << endl;
+    cout << "20. View pantry" << endl;
+    cout << "21. Suggest recipes from pantry" << endl;
     cout << " 0. Exit" << endl;
     cout << "==========================================" << endl;
     cout << "Choice: ";
@@ -281,6 +286,21 @@ int main() {
 
     } else if (choice == 18) {
       menu.generateShoppingList();
+
+    } else if (choice == 19) {
+      // Add to pantry
+      string iname, unit;
+      cout << "Ingredient name: "; getline(cin, iname);
+      double qty = readDouble("Quantity: ");
+      cout << "Unit: "; getline(cin, unit);
+      pantry.addItem(iname, qty, unit);
+      cout << "Added " << qty << " " << unit << " of " << iname << " to pantry!" << endl;
+
+    } else if (choice == 20) {
+      pantry.displayPantry();
+
+    } else if (choice == 21) {
+      mgr.suggestRecipes(pantry);
 
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;

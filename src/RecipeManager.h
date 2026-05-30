@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Recipe.h"
+#include "Pantry.h"
 
 using namespace std;
 
@@ -27,6 +28,7 @@ public:
   vector<Recipe> getByRating();
 
   void displayStats();
+  void suggestRecipes(Pantry& pantry);
   void saveToFile(string filename);
   void loadFromFile(string filename);
 };

@@ -140,6 +140,76 @@ void RecipeManager::displayStats() {
   cout << "==========================================" << endl;
 }
 
+void RecipeManager::suggestRecipes(Pantry& pantry) {
+  cout << "==========================================" << endl;
+  cout << "       RECIPE SUGGESTIONS" << endl;
+  cout << "==========================================" << endl;
+
+  if (recipes.empty()) {
+    cout << "  No recipes available." << endl;
+    cout << "==========================================" << endl;
+    return;
+  }
+
+  if (pantry.getCount() == 0) {
+    cout << "  Your pantry is empty. Add some items first!" << endl;
+    cout << "==========================================" << endl;
+    return;
+  }
+
+  vector<string> canMake;
+  vector<string> almostCanMake;
+  vector<vector<string>> missingDetails;
+
+  for (int i = 0; i < recipes.size(); i++) {
+    vector<Ingredient> ings = recipes[i].getIngredients();
+    bool allAvailable = true;
+    vector<string> missing;
+
+    for (int j = 0; j < ings.size(); j++) {
+      if (!pantry.hasEnough(ings[j].getName(), ings[j].getQuantity(), ings[j].getUnit())) {
+        allAvailable = false;
+        double have = pantry.getQuantity(ings[j].getName(), ings[j].getUnit());
+        string detail = "    - " + ings[j].getName() + ": need " +
+            to_string(ings[j].getQuantity()) + " " + ings[j].getUnit() +
+            ", have " + to_string(have) + " " + ings[j].getUnit();
+        // Trim trailing zeros from the numbers in the detail string
+        missing.push_back(detail);
+      }
+    }
+
+    if (allAvailable) {
+      canMake.push_back(recipes[i].getName());
+    } else if ((int)missing.size() <= 2) {
+      // "Almost" means missing at most 2 ingredients
+      almostCanMake.push_back(recipes[i].getName());
+      missingDetails.push_back(missing);
+    }
+  }
+
+  // Recipes you CAN make
+  cout << endl << "  You can make (" << canMake.size() << "):" << endl;
+  if (canMake.empty()) {
+    cout << "    (none)" << endl;
+  } else {
+    for (int i = 0; i < canMake.size(); i++)
+      cout << "    " << (i + 1) << ". " << canMake[i] << endl;
+  }
+
+  // Recipes you ALMOST can make
+  if (!almostCanMake.empty()) {
+    cout << endl << "  Almost there (missing 1-2 ingredients):" << endl;
+    for (int i = 0; i < almostCanMake.size(); i++) {
+      cout << "    " << almostCanMake[i] << endl;
+      cout << "    Missing:" << endl;
+      for (int j = 0; j < missingDetails[i].size(); j++)
+        cout << "  " << missingDetails[i][j] << endl;
+    }
+  }
+
+  cout << "==========================================" << endl;
+}
+
 void RecipeManager::saveToFile(string filename) {
   ofstream file(filename);
   for (int i = 0; i < recipes.size(); i++) {
