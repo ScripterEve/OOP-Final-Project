@@ -1,3 +1,5 @@
 recipe_manager
 recipes.txt
 .vscode/
+
+*.o

@@ -1,361 +1,13 @@
-#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "Ingredient.h"
-#include "RecipeBase.h"
+#include "Recipe.h"
+#include "RecipeManager.h"
+#include "WeeklyMenu.h"
 
 using namespace std;
-
-class Recipe : public RecipeBase {
-private:
-  vector<Ingredient> ingredients;
-  vector<string> steps;
-
-public:
-  Recipe(string n, int s, string c) : RecipeBase(n, s, c) {}
-
-  void addIngredient(Ingredient ing) { ingredients.push_back(ing); }
-
-  void removeIngredient(string ingName) {
-    for (int i = 0; i < ingredients.size(); i++) {
-      if (ingredients[i].getName() == ingName) {
-        ingredients.erase(ingredients.begin() + i);
-        return;
-      }
-    }
-  }
-
-  vector<Ingredient> getIngredients() { return ingredients; }
-
-  void addStep(string step) { steps.push_back(step); }
-
-  void removeStep(int index) {
-    if (index >= 0 && index < (int)steps.size())
-      steps.erase(steps.begin() + index);
-  }
-
-  vector<string> getSteps() { return steps; }
-
-  Recipe scaleServings(int newServings) {
-    double factor = (double)newServings / servings;
-    Recipe scaled(name, newServings, category);
-    scaled.tags = tags;
-    scaled.favorite = favorite;
-    scaled.rating = rating;
-    scaled.steps = steps;
-    for (int i = 0; i < ingredients.size(); i++)
-      scaled.addIngredient(ingredients[i].scale(factor));
-    return scaled;
-  }
-
-  double getTotalCalories() {
-    double total = 0;
-    for (int i = 0; i < ingredients.size(); i++)
-      total += ingredients[i].getCalories();
-    return total;
-  }
-
-  double getTotalProtein() {
-    double total = 0;
-    for (int i = 0; i < ingredients.size(); i++)
-      total += ingredients[i].getProtein();
-    return total;
-  }
-
-  double getTotalCarbs() {
-    double total = 0;
-    for (int i = 0; i < ingredients.size(); i++)
-      total += ingredients[i].getCarbs();
-    return total;
-  }
-
-  double getTotalFat() {
-    double total = 0;
-    for (int i = 0; i < ingredients.size(); i++)
-      total += ingredients[i].getFat();
-    return total;
-  }
-
-  void display() override {
-    cout << "==========================================" << endl;
-    cout << "  " << name;
-    if (favorite)
-      cout << " [FAVORITE]";
-    cout << endl;
-    cout << "==========================================" << endl;
-    cout << "Category: " << category << endl;
-    cout << "Servings: " << servings << endl;
-    if (rating > 0)
-      cout << "Rating: " << rating << "/5" << endl;
-    if (!tags.empty()) {
-      cout << "Tags: ";
-      for (int i = 0; i < tags.size(); i++) {
-        cout << tags[i];
-        if (i < tags.size() - 1)
-          cout << ", ";
-      }
-      cout << endl;
-    }
-    cout << endl << "Ingredients:" << endl;
-    for (int i = 0; i < ingredients.size(); i++)
-      ingredients[i].display();
-    cout << endl << "Steps:" << endl;
-    for (int i = 0; i < steps.size(); i++)
-      cout << "  " << (i + 1) << ". " << steps[i] << endl;
-    cout << endl << "Nutrition info:" << endl;
-    cout << "  Calories: " << getTotalCalories() << " kcal" << endl;
-    cout << "  Protein: " << getTotalProtein() << " g" << endl;
-    cout << "  Carbs: " << getTotalCarbs() << " g" << endl;
-    cout << "  Fat: " << getTotalFat() << " g" << endl;
-    cout << "==========================================" << endl;
-  }
-
-  void exportToFile(string filename) {
-    ofstream file(filename);
-    if (!file.is_open()) {
-      cout << "Error opening file." << endl;
-      return;
-    }
-    file << name << endl;
-    file << "Category: " << category << endl;
-    file << "Servings: " << servings << endl;
-    if (rating > 0)
-      file << "Rating: " << rating << "/5" << endl;
-    file << endl << "Ingredients:" << endl;
-    for (int i = 0; i < ingredients.size(); i++)
-      file << "  - " << ingredients[i].getName() << ": "
-           << ingredients[i].getQuantity() << " " << ingredients[i].getUnit()
-           << endl;
-    file << endl << "Steps:" << endl;
-    for (int i = 0; i < steps.size(); i++)
-      file << "  " << (i + 1) << ". " << steps[i] << endl;
-    file.close();
-    cout << "Exported to " << filename << endl;
-  }
-};
-
-class RecipeManager {
-private:
-  vector<Recipe> recipes;
-
-public:
-  void addRecipe(Recipe r) { recipes.push_back(r); }
-
-  bool removeRecipe(string name) {
-    for (int i = 0; i < recipes.size(); i++) {
-      if (recipes[i].getName() == name) {
-        recipes.erase(recipes.begin() + i);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  Recipe *getRecipe(string name) {
-    for (int i = 0; i < recipes.size(); i++) {
-      if (recipes[i].getName() == name)
-        return &recipes[i];
-    }
-    return nullptr;
-  }
-
-  vector<Recipe> &getAllRecipes() { return recipes; }
-  int getCount() { return recipes.size(); }
-
-  vector<Recipe> searchByName(string query) {
-    vector<Recipe> results;
-    for (int i = 0; i < recipes.size(); i++) {
-      if (recipes[i].getName().find(query) != string::npos)
-        results.push_back(recipes[i]);
-    }
-    return results;
-  }
-
-  vector<Recipe> filterByCategory(string cat) {
-    vector<Recipe> results;
-    for (int i = 0; i < recipes.size(); i++) {
-      if (recipes[i].getCategory() == cat)
-        results.push_back(recipes[i]);
-    }
-    return results;
-  }
-
-  vector<Recipe> searchByTag(string tag) {
-    vector<Recipe> results;
-    for (int i = 0; i < recipes.size(); i++) {
-      if (recipes[i].hasTag(tag))
-        results.push_back(recipes[i]);
-    }
-    return results;
-  }
-
-  vector<Recipe> searchByIngredient(string ing) {
-    vector<Recipe> results;
-    for (int i = 0; i < recipes.size(); i++) {
-      vector<Ingredient> ings = recipes[i].getIngredients();
-      for (int j = 0; j < ings.size(); j++) {
-        if (ings[j].getName() == ing) {
-          results.push_back(recipes[i]);
-          break;
-        }
-      }
-    }
-    return results;
-  }
-
-  vector<Recipe> getFavorites() {
-    vector<Recipe> results;
-    for (int i = 0; i < recipes.size(); i++) {
-      if (recipes[i].isFavorite())
-        results.push_back(recipes[i]);
-    }
-    return results;
-  }
-
-  vector<Recipe> getByRating() {
-    vector<Recipe> sorted = recipes;
-    for (int i = 0; i < sorted.size(); i++) {
-      for (int j = i + 1; j < sorted.size(); j++) {
-        if (sorted[j].getRating() > sorted[i].getRating()) {
-          Recipe temp = sorted[i];
-          sorted[i] = sorted[j];
-          sorted[j] = temp;
-        }
-      }
-    }
-    return sorted;
-  }
-
-  void displayStats() {
-    cout << "==========================================" << endl;
-    cout << "           STATISTICS" << endl;
-    cout << "==========================================" << endl;
-    cout << "Total recipes: " << recipes.size() << endl;
-
-    cout << endl << "By category:" << endl;
-    vector<string> cats;
-    vector<int> catCounts;
-    for (int i = 0; i < recipes.size(); i++) {
-      string c = recipes[i].getCategory();
-      bool found = false;
-      for (int j = 0; j < cats.size(); j++) {
-        if (cats[j] == c) { catCounts[j]++; found = true; break; }
-      }
-      if (!found) { cats.push_back(c); catCounts.push_back(1); }
-    }
-    for (int i = 0; i < cats.size(); i++)
-      cout << "  " << cats[i] << ": " << catCounts[i] << endl;
-
-    double totalRating = 0;
-    int rated = 0;
-    for (int i = 0; i < recipes.size(); i++) {
-      if (recipes[i].getRating() > 0) {
-        totalRating += recipes[i].getRating();
-        rated++;
-      }
-    }
-    if (rated > 0)
-      cout << endl << "Average rating: " << (totalRating / rated) << "/5" << endl;
-
-    int favs = 0;
-    for (int i = 0; i < recipes.size(); i++)
-      if (recipes[i].isFavorite()) favs++;
-    cout << "Favorites: " << favs << endl;
-
-    if (rated > 0) {
-      cout << endl << "Top rated:" << endl;
-      vector<Recipe> top = getByRating();
-      int show = 3;
-      if ((int)top.size() < show) show = top.size();
-      for (int i = 0; i < show; i++) {
-        if (top[i].getRating() > 0)
-          cout << "  " << top[i].getName() << " - " << top[i].getRating() << "/5" << endl;
-      }
-    }
-    cout << "==========================================" << endl;
-  }
-  void saveToFile(string filename) {
-    ofstream file(filename);
-    for (int i = 0; i < recipes.size(); i++) {
-      file << "---" << endl;
-      file << recipes[i].getName() << endl;
-      file << recipes[i].getServings() << endl;
-      file << recipes[i].getCategory() << endl;
-      file << recipes[i].getRating() << endl;
-      file << (recipes[i].isFavorite() ? 1 : 0) << endl;
-      vector<string> tags = recipes[i].getTags();
-      file << tags.size() << endl;
-      for (int j = 0; j < tags.size(); j++) file << tags[j] << endl;
-      vector<Ingredient> ings = recipes[i].getIngredients();
-      file << ings.size() << endl;
-      for (int j = 0; j < ings.size(); j++)
-        file << ings[j].getName() << "|" << ings[j].getQuantity() << "|" << ings[j].getUnit() << "|" << ings[j].getCalories() << "|" << ings[j].getProtein() << "|" << ings[j].getCarbs() << "|" << ings[j].getFat() << endl;
-      vector<string> steps = recipes[i].getSteps();
-      file << steps.size() << endl;
-      for (int j = 0; j < steps.size(); j++) file << steps[j] << endl;
-    }
-    file.close();
-  }
-
-  void loadFromFile(string filename) {
-    ifstream file(filename);
-    if (!file.is_open()) return;
-    string line;
-    while (getline(file, line)) {
-      if (line != "---") continue;
-      string name, cat;
-      int srv, rat, fav;
-      getline(file, name);
-      file >> srv; file.ignore();
-      getline(file, cat);
-      file >> rat; file.ignore();
-      file >> fav; file.ignore();
-      Recipe r(name, srv, cat);
-      r.setRating(rat);
-      if (fav == 1) r.toggleFavorite();
-      int tagCount;
-      file >> tagCount; file.ignore();
-      for (int i = 0; i < tagCount; i++) {
-        string tag;
-        getline(file, tag);
-        r.addTag(tag);
-      }
-      int ingCount;
-      file >> ingCount; file.ignore();
-      for (int i = 0; i < ingCount; i++) {
-        string ingLine;
-        getline(file, ingLine);
-        string iname, unit;
-        double qty, cal, prot = 0, carb = 0, ft = 0;
-        int p1 = ingLine.find('|');
-        int p2 = ingLine.find('|', p1+1);
-        int p3 = ingLine.find('|', p2+1);
-        int p4 = ingLine.find('|', p3+1);
-        int p5 = ingLine.find('|', p4+1);
-        int p6 = ingLine.find('|', p5+1);
-        iname = ingLine.substr(0, p1);
-        qty = stod(ingLine.substr(p1+1, p2-p1-1));
-        unit = ingLine.substr(p2+1, p3-p2-1);
-        cal = stod(ingLine.substr(p3+1, p4-p3-1));
-        if (p4 != (int)string::npos) prot = stod(ingLine.substr(p4+1, p5-p4-1));
-        if (p5 != (int)string::npos) carb = stod(ingLine.substr(p5+1, p6-p5-1));
-        if (p6 != (int)string::npos) ft = stod(ingLine.substr(p6+1));
-        r.addIngredient(Ingredient(iname, qty, unit, cal, prot, carb, ft));
-      }
-      int stepCount;
-      file >> stepCount; file.ignore();
-      for (int i = 0; i < stepCount; i++) {
-        string step;
-        getline(file, step);
-        r.addStep(step);
-      }
-      recipes.push_back(r);
-    }
-    file.close();
-  }
-};
 
 void displayList(vector<Recipe> list) {
   if (list.empty()) {
@@ -375,6 +27,7 @@ void displayList(vector<Recipe> list) {
 
 int main() {
   RecipeManager mgr;
+  WeeklyMenu menu;
   string dataFile = "recipes.txt";
   mgr.loadFromFile(dataFile);
 
@@ -467,6 +120,8 @@ int main() {
     cout << "13. Sort by rating" << endl;
     cout << "14. Export recipe to file" << endl;
     cout << "15. Statistics" << endl;
+    cout << "16. Plan weekly menu" << endl;
+    cout << "17. View weekly plan" << endl;
     cout << " 0. Exit" << endl;
     cout << "==========================================" << endl;
     cout << "Choice: ";
@@ -590,6 +245,39 @@ int main() {
     } else if (choice == 15) {
       mgr.displayStats();
 
+    } else if (choice == 16) {
+      // Plan weekly menu
+      cout << "Available days:" << endl;
+      for (int i = 0; i < menu.getDaysCount(); i++)
+        cout << "  " << (i + 1) << ". " << menu.getDayName(i) << endl;
+      int dayChoice = readInt("Select day (1-7): ");
+      if (dayChoice < 1 || dayChoice > menu.getDaysCount()) {
+        cout << "Invalid day." << endl;
+      } else {
+        string selectedDay = menu.getDayName(dayChoice - 1);
+        cout << endl << "Available recipes:" << endl;
+        vector<Recipe>& allRecipes = mgr.getAllRecipes();
+        if (allRecipes.empty()) {
+          cout << "No recipes available. Add some first!" << endl;
+        } else {
+          for (int i = 0; i < allRecipes.size(); i++) {
+            cout << "  " << (i + 1) << ". " << allRecipes[i].getName()
+                 << " [" << allRecipes[i].getCategory() << "]" << endl;
+          }
+          int recipeChoice = readInt("Select recipe: ");
+          if (recipeChoice < 1 || recipeChoice > (int)allRecipes.size()) {
+            cout << "Invalid selection." << endl;
+          } else {
+            menu.addRecipeToDay(selectedDay, allRecipes[recipeChoice - 1]);
+            cout << "Added \"" << allRecipes[recipeChoice - 1].getName()
+                 << "\" to " << selectedDay << "!" << endl;
+          }
+        }
+      }
+
+    } else if (choice == 17) {
+      menu.displayWeeklyPlan();
+
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;
     }
@@ -606,4 +294,3 @@ int main() {
   cout << "Recipes saved. Goodbye!" << endl;
   return 0;
 }
-
