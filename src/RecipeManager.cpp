@@ -45,10 +45,17 @@ vector<Recipe> RecipeManager::filterByCategory(string cat) {
   return results;
 }
 
-vector<Recipe> RecipeManager::searchByTag(string tag) {
+vector<Recipe> RecipeManager::searchByTag(vector<string> tags) {
   vector<Recipe> results;
   for (int i = 0; i < recipes.size(); i++) {
-    if (recipes[i].hasTag(tag))
+    bool hasAll = true;
+    for (int j = 0; j < tags.size(); j++) {
+      if (!recipes[i].hasTag(tags[j])) {
+        hasAll = false;
+        break;
+      }
+    }
+    if (hasAll)
       results.push_back(recipes[i]);
   }
   return results;
@@ -82,6 +89,20 @@ vector<Recipe> RecipeManager::getByRating() {
   for (int i = 0; i < sorted.size(); i++) {
     for (int j = i + 1; j < sorted.size(); j++) {
       if (sorted[j].getRating() > sorted[i].getRating()) {
+        Recipe temp = sorted[i];
+        sorted[i] = sorted[j];
+        sorted[j] = temp;
+      }
+    }
+  }
+  return sorted;
+}
+
+vector<Recipe> RecipeManager::getByTime() {
+  vector<Recipe> sorted = recipes;
+  for (int i = 0; i < sorted.size(); i++) {
+    for (int j = i + 1; j < sorted.size(); j++) {
+      if (sorted[j].getEstimatedTime() < sorted[i].getEstimatedTime()) {
         Recipe temp = sorted[i];
         sorted[i] = sorted[j];
         sorted[j] = temp;

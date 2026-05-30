@@ -22,6 +22,7 @@ void displayList(vector<Recipe> list) {
       cout << " [FAV]";
     if (list[i].getRating() > 0)
       cout << " " << list[i].getRating() << "/5";
+    cout << " (~" << list[i].getEstimatedTime() << " min)";
     cout << endl;
   }
 }
@@ -128,6 +129,7 @@ int main() {
     cout << "19. Add to pantry" << endl;
     cout << "20. View pantry" << endl;
     cout << "21. Suggest recipes from pantry" << endl;
+    cout << "22. Sort by prep time" << endl;
     cout << " 0. Exit" << endl;
     cout << "==========================================" << endl;
     cout << "Choice: ";
@@ -204,8 +206,48 @@ int main() {
       displayList(mgr.searchByIngredient(input));
 
     } else if (choice == 8) {
-      cout << "Tag: "; getline(cin, input);
-      displayList(mgr.searchByTag(input));
+      cout << "Tags (comma-separated): "; getline(cin, input);
+      // Split input by commas into a vector
+      vector<string> tagList;
+      string current;
+      for (int i = 0; i < (int)input.size(); i++) {
+        if (input[i] == ',') {
+          // Trim whitespace from current
+          string trimmed;
+          int start = 0, end = current.size() - 1;
+          while (start <= end && current[start] == ' ') start++;
+          while (end >= start && current[end] == ' ') end--;
+          if (start <= end)
+            trimmed = current.substr(start, end - start + 1);
+          if (!trimmed.empty())
+            tagList.push_back(trimmed);
+          current = "";
+        } else {
+          current += input[i];
+        }
+      }
+      // Don't forget the last token
+      {
+        int start = 0, end = current.size() - 1;
+        while (start <= end && current[start] == ' ') start++;
+        while (end >= start && current[end] == ' ') end--;
+        if (start <= end) {
+          string trimmed = current.substr(start, end - start + 1);
+          if (!trimmed.empty())
+            tagList.push_back(trimmed);
+        }
+      }
+      if (tagList.empty()) {
+        cout << "No tags entered." << endl;
+      } else {
+        cout << "Searching for recipes with ALL tags: ";
+        for (int i = 0; i < tagList.size(); i++) {
+          cout << tagList[i];
+          if (i < (int)tagList.size() - 1) cout << ", ";
+        }
+        cout << endl;
+        displayList(mgr.searchByTag(tagList));
+      }
 
     } else if (choice == 9) {
       cout << "Name: "; getline(cin, input);
@@ -301,6 +343,10 @@ int main() {
 
     } else if (choice == 21) {
       mgr.suggestRecipes(pantry);
+
+    } else if (choice == 22) {
+      cout << "Recipes sorted by estimated prep time:" << endl;
+      displayList(mgr.getByTime());
 
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;

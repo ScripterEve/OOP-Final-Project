@@ -31,6 +31,7 @@ public:
   double getTotalProtein();
   double getTotalCarbs();
   double getTotalFat();
+  int getEstimatedTime();
 
   void display() override;
   void exportToFile(string filename);

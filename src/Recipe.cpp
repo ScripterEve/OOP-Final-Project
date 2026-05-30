@@ -68,6 +68,10 @@ double Recipe::getTotalFat() {
   return total;
 }
 
+int Recipe::getEstimatedTime() {
+  return steps.size() * 5;
+}
+
 void Recipe::display() {
   cout << "==========================================" << endl;
   cout << "  " << name;
@@ -99,6 +103,7 @@ void Recipe::display() {
   cout << "  Protein: " << getTotalProtein() << " g" << endl;
   cout << "  Carbs: " << getTotalCarbs() << " g" << endl;
   cout << "  Fat: " << getTotalFat() << " g" << endl;
+  cout << endl << "Estimated prep time: " << getEstimatedTime() << " min" << endl;
   cout << "==========================================" << endl;
 }
 

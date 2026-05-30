@@ -22,10 +22,11 @@ public:
 
   vector<Recipe> searchByName(string query);
   vector<Recipe> filterByCategory(string cat);
-  vector<Recipe> searchByTag(string tag);
+  vector<Recipe> searchByTag(vector<string> tags);
   vector<Recipe> searchByIngredient(string ing);
   vector<Recipe> getFavorites();
   vector<Recipe> getByRating();
+  vector<Recipe> getByTime();
 
   void displayStats();
   void suggestRecipes(Pantry& pantry);
