@@ -285,7 +285,7 @@ int main() {
       menu.displayWeeklyPlan();
 
     } else if (choice == 18) {
-      menu.generateShoppingList();
+      menu.generateShoppingList(pantry);
 
     } else if (choice == 19) {
       // Add to pantry

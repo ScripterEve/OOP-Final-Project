@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Recipe.h"
+#include "Pantry.h"
 
 using namespace std;
 
@@ -26,7 +27,7 @@ public:
   int getDaysCount();
 
   void displayWeeklyPlan();
-  void generateShoppingList();
+  void generateShoppingList(Pantry& pantry);
   void clearDay(string day);
   void clearAll();
 };

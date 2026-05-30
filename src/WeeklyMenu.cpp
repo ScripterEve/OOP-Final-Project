@@ -70,7 +70,7 @@ void WeeklyMenu::displayWeeklyPlan() {
   cout << endl << "==========================================" << endl;
 }
 
-void WeeklyMenu::generateShoppingList() {
+void WeeklyMenu::generateShoppingList(Pantry& pantry) {
   // Parallel vectors for aggregated ingredients
   vector<string> names;
   vector<double> quantities;
@@ -103,12 +103,29 @@ void WeeklyMenu::generateShoppingList() {
     }
   }
 
+  // Subtract pantry quantities from gross requirements
+  for (int i = 0; i < names.size(); i++) {
+    double have = pantry.getQuantity(names[i], units[i]);
+    quantities[i] -= have;
+  }
+
+  // Remove items that are fully covered by the pantry (quantity <= 0)
+  for (int i = 0; i < names.size(); ) {
+    if (quantities[i] <= 0) {
+      names.erase(names.begin() + i);
+      quantities.erase(quantities.begin() + i);
+      units.erase(units.begin() + i);
+    } else {
+      i++;
+    }
+  }
+
   cout << "==========================================" << endl;
   cout << "         SHOPPING LIST" << endl;
   cout << "==========================================" << endl;
 
   if (names.empty()) {
-    cout << "  No meals planned yet." << endl;
+    cout << "  Nothing to buy - pantry has everything!" << endl;
     cout << "==========================================" << endl;
     return;
   }
