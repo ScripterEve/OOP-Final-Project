@@ -75,34 +75,28 @@ int main() {
 
   auto readInt = [](string prompt) -> int {
     int val;
-    while (true) {
-      cout << prompt;
-      cin >> val;
-      if (cin.fail()) {
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "Please enter a number." << endl;
-      } else {
-        cin.ignore();
-        return val;
-      }
+    cout << prompt;
+    cin >> val;
+    if (cin.fail()) {
+      cin.clear();
+      cin.ignore(1000, '\n');
+      throw InvalidInputException("");
     }
+    cin.ignore();
+    return val;
   };
 
   auto readDouble = [](string prompt) -> double {
     double val;
-    while (true) {
-      cout << prompt;
-      cin >> val;
-      if (cin.fail()) {
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "Please enter a number." << endl;
-      } else {
-        cin.ignore();
-        return val;
-      }
+    cout << prompt;
+    cin >> val;
+    if (cin.fail()) {
+      cin.clear();
+      cin.ignore(1000, '\n');
+      throw InvalidInputException("");
     }
+    cin.ignore();
+    return val;
   };
 
   int choice;
@@ -357,6 +351,8 @@ int main() {
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;
     }
+    } catch (const InvalidInputException& e) {
+      cout << "Invalid input. Action aborted." << endl;
     } catch (const exception& e) {
       cout << "Error: " << e.what() << endl;
     }
