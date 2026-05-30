@@ -10,19 +10,25 @@
 using namespace std;
 
 class WeeklyMenu {
+public:
+  struct PlannedMeal {
+    Recipe recipe;
+    int targetServings;
+  };
+
 private:
   static const int DAYS_COUNT = 7;
   string dayNames[DAYS_COUNT];
-  vector<Recipe> schedule[DAYS_COUNT];
+  vector<PlannedMeal> schedule[DAYS_COUNT];
 
   int dayIndex(string day);
 
 public:
   WeeklyMenu();
 
-  bool addRecipeToDay(string day, Recipe recipe);
+  bool addRecipeToDay(string day, Recipe recipe, int targetServings);
   bool removeRecipeFromDay(string day, int index);
-  vector<Recipe> getRecipesForDay(string day);
+  vector<PlannedMeal> getRecipesForDay(string day);
   string getDayName(int index);
   int getDaysCount();
 

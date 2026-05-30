@@ -317,9 +317,14 @@ int main() {
           if (recipeChoice < 1 || recipeChoice > (int)allRecipes.size()) {
             cout << "Invalid selection." << endl;
           } else {
-            menu.addRecipeToDay(selectedDay, allRecipes[recipeChoice - 1]);
-            cout << "Added \"" << allRecipes[recipeChoice - 1].getName()
-                 << "\" to " << selectedDay << "!" << endl;
+            int servings = readInt("For how many servings are you planning this meal? ");
+            if (servings > 0) {
+              menu.addRecipeToDay(selectedDay, allRecipes[recipeChoice - 1], servings);
+              cout << "Added \"" << allRecipes[recipeChoice - 1].getName()
+                   << "\" (" << servings << " servings) to " << selectedDay << "!" << endl;
+            } else {
+              cout << "Invalid servings." << endl;
+            }
           }
         }
       }

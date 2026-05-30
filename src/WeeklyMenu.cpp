@@ -21,10 +21,10 @@ int WeeklyMenu::dayIndex(string day) {
   return -1;
 }
 
-bool WeeklyMenu::addRecipeToDay(string day, Recipe recipe) {
+bool WeeklyMenu::addRecipeToDay(string day, Recipe recipe, int targetServings) {
   int idx = dayIndex(day);
   if (idx == -1) return false;
-  schedule[idx].push_back(recipe);
+  schedule[idx].push_back({recipe, targetServings});
   return true;
 }
 
@@ -36,9 +36,9 @@ bool WeeklyMenu::removeRecipeFromDay(string day, int index) {
   return true;
 }
 
-vector<Recipe> WeeklyMenu::getRecipesForDay(string day) {
+vector<WeeklyMenu::PlannedMeal> WeeklyMenu::getRecipesForDay(string day) {
   int idx = dayIndex(day);
-  if (idx == -1) return vector<Recipe>();
+  if (idx == -1) return vector<PlannedMeal>();
   return schedule[idx];
 }
 
@@ -62,8 +62,9 @@ void WeeklyMenu::displayWeeklyPlan() {
       cout << "    (no meals planned)" << endl;
     } else {
       for (int j = 0; j < schedule[i].size(); j++) {
-        cout << "    " << (j + 1) << ". " << schedule[i][j].getName()
-             << " [" << schedule[i][j].getCategory() << "]" << endl;
+        cout << "    " << (j + 1) << ". " << schedule[i][j].recipe.getName()
+             << " [" << schedule[i][j].recipe.getCategory() << "] - " 
+             << schedule[i][j].targetServings << " servings" << endl;
       }
     }
   }
@@ -79,7 +80,9 @@ void WeeklyMenu::generateShoppingList(Pantry& pantry) {
   // Iterate all days and all recipes
   for (int i = 0; i < DAYS_COUNT; i++) {
     for (int j = 0; j < schedule[i].size(); j++) {
-      vector<Ingredient> ings = schedule[i][j].getIngredients();
+      // Scale the recipe to the planned target servings
+      Recipe scaledRecipe = schedule[i][j].recipe.scaleServings(schedule[i][j].targetServings);
+      vector<Ingredient> ings = scaledRecipe.getIngredients();
       for (int k = 0; k < ings.size(); k++) {
         string ingName = ings[k].getName();
         string ingUnit = ings[k].getUnit();
