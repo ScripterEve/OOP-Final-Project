@@ -7,6 +7,7 @@
 #include "RecipeManager.h"
 #include "WeeklyMenu.h"
 #include "Pantry.h"
+// Custom exceptions for error handling
 #include "Exceptions.h"
 
 using namespace std;

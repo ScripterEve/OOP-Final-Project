@@ -1,47 +1,27 @@
 #ifndef EXCEPTIONS_H
 #define EXCEPTIONS_H
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 
-class InvalidIngredientException : public std::exception {
-private:
-    std::string message;
+class InvalidIngredientException : public std::invalid_argument {
 public:
-    InvalidIngredientException(const std::string& msg) : message(msg) {}
-    const char* what() const noexcept override {
-        return message.c_str();
-    }
+    InvalidIngredientException(const std::string& msg) : std::invalid_argument(msg) {}
 };
 
-class RecipeNotFoundException : public std::exception {
-private:
-    std::string message;
+class RecipeNotFoundException : public std::runtime_error {
 public:
-    RecipeNotFoundException(const std::string& msg) : message(msg) {}
-    const char* what() const noexcept override {
-        return message.c_str();
-    }
+    RecipeNotFoundException(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-class FileLoadException : public std::exception {
-private:
-    std::string message;
+class FileLoadException : public std::runtime_error {
 public:
-    FileLoadException(const std::string& msg) : message(msg) {}
-    const char* what() const noexcept override {
-        return message.c_str();
-    }
+    FileLoadException(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-class InvalidInputException : public std::exception {
-private:
-    std::string message;
+class InvalidInputException : public std::runtime_error {
 public:
-    InvalidInputException(const std::string& msg) : message(msg) {}
-    const char* what() const noexcept override {
-        return message.c_str();
-    }
+    InvalidInputException(const std::string& msg) : std::runtime_error(msg) {}
 };
 
 #endif
