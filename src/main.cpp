@@ -7,6 +7,7 @@
 #include "RecipeManager.h"
 #include "WeeklyMenu.h"
 #include "Pantry.h"
+#include "Exceptions.h"
 
 using namespace std;
 
@@ -32,7 +33,11 @@ int main() {
   WeeklyMenu menu;
   Pantry pantry;
   string dataFile = "recipes.txt";
-  mgr.loadFromFile(dataFile);
+  try {
+    mgr.loadFromFile(dataFile);
+  } catch (const exception& e) {
+    cout << "Warning: " << e.what() << endl;
+  }
 
   if (mgr.getCount() == 0) {
     Recipe r1("Shopska salad", 4, "salad");
@@ -142,7 +147,8 @@ int main() {
     }
     cin.ignore();
 
-    if (choice == 1) {
+    try {
+      if (choice == 1) {
       displayList(mgr.getAllRecipes());
 
     } else if (choice == 2) {
@@ -184,14 +190,13 @@ int main() {
 
     } else if (choice == 3) {
       cout << "Name: "; getline(cin, input);
-      if (mgr.removeRecipe(input)) cout << "Deleted." << endl;
-      else cout << "Not found." << endl;
+      mgr.removeRecipe(input);
+      cout << "Deleted." << endl;
 
     } else if (choice == 4) {
       cout << "Name: "; getline(cin, input);
       Recipe* r = mgr.getRecipe(input);
-      if (r) r->display();
-      else cout << "Not found." << endl;
+      r->display();
 
     } else if (choice == 5) {
       cout << "Search: "; getline(cin, input);
@@ -252,28 +257,26 @@ int main() {
     } else if (choice == 9) {
       cout << "Name: "; getline(cin, input);
       Recipe* r = mgr.getRecipe(input);
-      if (r) {
-        int ns = readInt("New servings: ");
-        Recipe scaled = r->scaleServings(ns);
-        scaled.display();
-      } else cout << "Not found." << endl;
+      int ns = readInt("New servings: ");
+      Recipe scaled = r->scaleServings(ns);
+      scaled.display();
 
     } else if (choice == 10) {
       cout << "Name: "; getline(cin, input);
       Recipe* r = mgr.getRecipe(input);
-      if (r) {
-        int rt = readInt("Rating (1-5): ");
-        r->setRating(rt);
+      int rat = readInt("Rating (1-5): ");
+      if (rat >= 1 && rat <= 5) {
+        r->setRating(rat);
         cout << "Rated!" << endl;
-      } else cout << "Not found." << endl;
+      } else {
+        cout << "Invalid rating." << endl;
+      }
 
     } else if (choice == 11) {
       cout << "Name: "; getline(cin, input);
       Recipe* r = mgr.getRecipe(input);
-      if (r) {
-        r->toggleFavorite();
-        cout << (r->isFavorite() ? "Added to favorites." : "Removed from favorites.") << endl;
-      } else cout << "Not found." << endl;
+      r->toggleFavorite();
+      cout << "Toggled." << endl;
 
     } else if (choice == 12) {
       displayList(mgr.getFavorites());
@@ -284,11 +287,9 @@ int main() {
     } else if (choice == 14) {
       cout << "Name: "; getline(cin, input);
       Recipe* r = mgr.getRecipe(input);
-      if (r) {
-        string fname;
-        cout << "Filename: "; getline(cin, fname);
-        r->exportToFile(fname);
-      } else cout << "Not found." << endl;
+      string fn;
+      cout << "Filename (e.g. export.txt): "; getline(cin, fn);
+      r->exportToFile(fn);
 
     } else if (choice == 15) {
       mgr.displayStats();
@@ -350,6 +351,9 @@ int main() {
 
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;
+    }
+    } catch (const exception& e) {
+      cout << "Error: " << e.what() << endl;
     }
 
     if (choice != 0) {

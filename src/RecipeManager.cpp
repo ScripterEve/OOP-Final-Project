@@ -6,14 +6,14 @@ using namespace std;
 
 void RecipeManager::addRecipe(Recipe r) { recipes.push_back(r); }
 
-bool RecipeManager::removeRecipe(string name) {
+void RecipeManager::removeRecipe(string name) {
   for (int i = 0; i < recipes.size(); i++) {
     if (recipes[i].getName() == name) {
       recipes.erase(recipes.begin() + i);
-      return true;
+      return;
     }
   }
-  return false;
+  throw RecipeNotFoundException("Recipe not found: " + name);
 }
 
 Recipe* RecipeManager::getRecipe(string name) {
@@ -21,7 +21,7 @@ Recipe* RecipeManager::getRecipe(string name) {
     if (recipes[i].getName() == name)
       return &recipes[i];
   }
-  return nullptr;
+  throw RecipeNotFoundException("Recipe not found: " + name);
 }
 
 vector<Recipe>& RecipeManager::getAllRecipes() { return recipes; }
@@ -257,56 +257,60 @@ void RecipeManager::saveToFile(string filename) {
 void RecipeManager::loadFromFile(string filename) {
   ifstream file(filename);
   if (!file.is_open()) return;
-  string line;
-  while (getline(file, line)) {
-    if (line != "---") continue;
-    string name, cat;
-    int srv, rat, fav;
-    getline(file, name);
-    file >> srv; file.ignore();
-    getline(file, cat);
-    file >> rat; file.ignore();
-    file >> fav; file.ignore();
-    Recipe r(name, srv, cat);
-    r.setRating(rat);
-    if (fav == 1) r.toggleFavorite();
-    int tagCount;
-    file >> tagCount; file.ignore();
-    for (int i = 0; i < tagCount; i++) {
-      string tag;
-      getline(file, tag);
-      r.addTag(tag);
+  try {
+    string line;
+    while (getline(file, line)) {
+      if (line != "---") continue;
+      string name, cat;
+      int srv, rat, fav;
+      getline(file, name);
+      file >> srv; file.ignore();
+      getline(file, cat);
+      file >> rat; file.ignore();
+      file >> fav; file.ignore();
+      Recipe r(name, srv, cat);
+      r.setRating(rat);
+      if (fav == 1) r.toggleFavorite();
+      int tagCount;
+      file >> tagCount; file.ignore();
+      for (int i = 0; i < tagCount; i++) {
+        string tag;
+        getline(file, tag);
+        r.addTag(tag);
+      }
+      int ingCount;
+      file >> ingCount; file.ignore();
+      for (int i = 0; i < ingCount; i++) {
+        string ingLine;
+        getline(file, ingLine);
+        string iname, unit;
+        double qty, cal, prot = 0, carb = 0, ft = 0;
+        int p1 = ingLine.find('|');
+        int p2 = ingLine.find('|', p1+1);
+        int p3 = ingLine.find('|', p2+1);
+        int p4 = ingLine.find('|', p3+1);
+        int p5 = ingLine.find('|', p4+1);
+        int p6 = ingLine.find('|', p5+1);
+        iname = ingLine.substr(0, p1);
+        qty = stod(ingLine.substr(p1+1, p2-p1-1));
+        unit = ingLine.substr(p2+1, p3-p2-1);
+        cal = stod(ingLine.substr(p3+1, p4-p3-1));
+        if (p4 != (int)string::npos) prot = stod(ingLine.substr(p4+1, p5-p4-1));
+        if (p5 != (int)string::npos) carb = stod(ingLine.substr(p5+1, p6-p5-1));
+        if (p6 != (int)string::npos) ft = stod(ingLine.substr(p6+1));
+        r.addIngredient(Ingredient(iname, qty, unit, cal, prot, carb, ft));
+      }
+      int stepCount;
+      file >> stepCount; file.ignore();
+      for (int i = 0; i < stepCount; i++) {
+        string step;
+        getline(file, step);
+        r.addStep(step);
+      }
+      recipes.push_back(r);
     }
-    int ingCount;
-    file >> ingCount; file.ignore();
-    for (int i = 0; i < ingCount; i++) {
-      string ingLine;
-      getline(file, ingLine);
-      string iname, unit;
-      double qty, cal, prot = 0, carb = 0, ft = 0;
-      int p1 = ingLine.find('|');
-      int p2 = ingLine.find('|', p1+1);
-      int p3 = ingLine.find('|', p2+1);
-      int p4 = ingLine.find('|', p3+1);
-      int p5 = ingLine.find('|', p4+1);
-      int p6 = ingLine.find('|', p5+1);
-      iname = ingLine.substr(0, p1);
-      qty = stod(ingLine.substr(p1+1, p2-p1-1));
-      unit = ingLine.substr(p2+1, p3-p2-1);
-      cal = stod(ingLine.substr(p3+1, p4-p3-1));
-      if (p4 != (int)string::npos) prot = stod(ingLine.substr(p4+1, p5-p4-1));
-      if (p5 != (int)string::npos) carb = stod(ingLine.substr(p5+1, p6-p5-1));
-      if (p6 != (int)string::npos) ft = stod(ingLine.substr(p6+1));
-      r.addIngredient(Ingredient(iname, qty, unit, cal, prot, carb, ft));
-    }
-    int stepCount;
-    file >> stepCount; file.ignore();
-    for (int i = 0; i < stepCount; i++) {
-      string step;
-      getline(file, step);
-      r.addStep(step);
-    }
-    recipes.push_back(r);
+  } catch (const exception& e) {
+    throw FileLoadException("Failed to load recipes from file: invalid format.");
   }
   file.close();
 }

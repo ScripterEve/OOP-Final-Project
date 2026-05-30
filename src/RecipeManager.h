@@ -6,6 +6,7 @@
 
 #include "Recipe.h"
 #include "Pantry.h"
+#include "Exceptions.h"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ private:
 
 public:
   void addRecipe(Recipe r);
-  bool removeRecipe(string name);
+  void removeRecipe(string name);
   Recipe* getRecipe(string name);
   vector<Recipe>& getAllRecipes();
   int getCount();

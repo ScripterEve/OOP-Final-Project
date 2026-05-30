@@ -1,10 +1,15 @@
 #include "Ingredient.h"
+#include "Exceptions.h"
 #include <iostream>
 
 using namespace std;
 
 Ingredient::Ingredient(string n, double q, string u, double cal, double p, double c, double f)
-    : name(n), quantity(q), unit(u), calories(cal), protein(p), carbs(c), fat(f) {}
+    : name(n), quantity(q), unit(u), calories(cal), protein(p), carbs(c), fat(f) {
+  if (q < 0) {
+    throw InvalidIngredientException("Negative quantity not allowed for ingredient: " + n);
+  }
+}
 
 string Ingredient::getName() { return name; }
 double Ingredient::getQuantity() { return quantity; }
