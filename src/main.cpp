@@ -76,28 +76,34 @@ int main() {
 
   auto readInt = [](string prompt) -> int {
     int val;
-    cout << prompt;
-    cin >> val;
-    if (cin.fail()) {
-      cin.clear();
-      cin.ignore(1000, '\n');
-      throw InvalidInputException("");
+    while (true) {
+      cout << prompt;
+      cin >> val;
+      if (cin.fail()) {
+        cin.clear();
+        cin.ignore(1000, '\n');
+        cout << "Please enter a number." << endl;
+      } else {
+        cin.ignore();
+        return val;
+      }
     }
-    cin.ignore();
-    return val;
   };
 
   auto readDouble = [](string prompt) -> double {
     double val;
-    cout << prompt;
-    cin >> val;
-    if (cin.fail()) {
-      cin.clear();
-      cin.ignore(1000, '\n');
-      throw InvalidInputException("");
+    while (true) {
+      cout << prompt;
+      cin >> val;
+      if (cin.fail()) {
+        cin.clear();
+        cin.ignore(1000, '\n');
+        cout << "Please enter a number." << endl;
+      } else {
+        cin.ignore();
+        return val;
+      }
     }
-    cin.ignore();
-    return val;
   };
 
   int choice;
@@ -189,9 +195,21 @@ int main() {
       cout << "Deleted." << endl;
 
     } else if (choice == 4) {
-      cout << "Name: "; getline(cin, input);
-      Recipe* r = mgr.getRecipe(input);
-      r->display();
+      vector<Recipe>& allRecipes = mgr.getAllRecipes();
+      if (allRecipes.empty()) {
+        cout << "No recipes available." << endl;
+      } else {
+        displayList(allRecipes);
+        int recipeChoice;
+        while (true) {
+          recipeChoice = readInt("Select recipe number: ");
+          if (recipeChoice >= 1 && recipeChoice <= (int)allRecipes.size()) {
+            break;
+          }
+          cout << "Invalid number. Please try again." << endl;
+        }
+        allRecipes[recipeChoice - 1].display();
+      }
 
     } else if (choice == 5) {
       cout << "Search: "; getline(cin, input);
@@ -352,8 +370,6 @@ int main() {
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;
     }
-    } catch (const InvalidInputException& e) {
-      cout << "Invalid input. Action aborted." << endl;
     } catch (const exception& e) {
       cout << "Error: " << e.what() << endl;
     }

@@ -1,6 +1,8 @@
 #include "RecipeManager.h"
 #include <fstream>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 
 using namespace std;
 
@@ -63,10 +65,16 @@ vector<Recipe> RecipeManager::searchByTag(vector<string> tags) {
 
 vector<Recipe> RecipeManager::searchByIngredient(string ing) {
   vector<Recipe> results;
+  string lowerQuery = ing;
+  transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+
   for (int i = 0; i < recipes.size(); i++) {
     vector<Ingredient> ings = recipes[i].getIngredients();
     for (int j = 0; j < ings.size(); j++) {
-      if (ings[j].getName() == ing) {
+      string lowerIng = ings[j].getName();
+      transform(lowerIng.begin(), lowerIng.end(), lowerIng.begin(), ::tolower);
+      
+      if (lowerIng == lowerQuery) {
         results.push_back(recipes[i]);
         break;
       }
