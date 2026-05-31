@@ -1,5 +1,11 @@
 #include "WeeklyMenu.h"
 #include <iostream>
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <iomanip>
+#include "Exceptions.h"
+#include "RecipeManager.h"
 
 using namespace std;
 
@@ -61,7 +67,7 @@ void WeeklyMenu::displayWeeklyPlan() {
     if (schedule[i].empty()) {
       cout << "    (no meals planned)" << endl;
     } else {
-      for (int j = 0; j < schedule[i].size(); j++) {
+      for (int j = 0; j < (int)schedule[i].size(); j++) {
         cout << "    " << (j + 1) << ". " << schedule[i][j].recipe.getName()
              << " [" << schedule[i][j].recipe.getCategory() << "] - " 
              << schedule[i][j].targetServings << " servings" << endl;
@@ -71,7 +77,52 @@ void WeeklyMenu::displayWeeklyPlan() {
   cout << endl << "==========================================" << endl;
 }
 
-void WeeklyMenu::generateShoppingList(Pantry& pantry) {
+void WeeklyMenu::saveToFile(string filename) {
+  ofstream file(filename);
+  if (!file.is_open()) {
+    throw FileLoadException("Failed to open file for saving: " + filename);
+  }
+  for (int i = 0; i < DAYS_COUNT; i++) {
+    file << schedule[i].size() << endl;
+    for (int j = 0; j < (int)schedule[i].size(); j++) {
+      file << schedule[i][j].recipe.getName() << "|" << schedule[i][j].targetServings << endl;
+    }
+  }
+  file.close();
+}
+
+void WeeklyMenu::loadFromFile(string filename, RecipeManager& mgr) {
+  ifstream file(filename);
+  if (!file.is_open()) return;
+  try {
+    string line;
+    for (int i = 0; i < DAYS_COUNT; i++) {
+      if (!getline(file, line)) break;
+      int count = stoi(line);
+      for (int j = 0; j < count; j++) {
+        if (!getline(file, line)) break;
+        int p = line.find('|');
+        if (p != (int)string::npos) {
+          string recipeName = line.substr(0, p);
+          int servings = stoi(line.substr(p + 1));
+          try {
+            Recipe* r = mgr.getRecipe(recipeName);
+            if (r) {
+              schedule[i].push_back({*r, servings});
+            }
+          } catch (...) {
+             // Recipe was deleted, ignore it
+          }
+        }
+      }
+    }
+  } catch (...) {
+    throw FileLoadException("Error parsing weekly menu file: " + filename);
+  }
+  file.close();
+}
+
+void WeeklyMenu::generateShoppingList() {
   // Parallel vectors for aggregated ingredients
   vector<string> names;
   vector<double> quantities;
@@ -79,18 +130,20 @@ void WeeklyMenu::generateShoppingList(Pantry& pantry) {
 
   // Iterate all days and all recipes
   for (int i = 0; i < DAYS_COUNT; i++) {
-    for (int j = 0; j < schedule[i].size(); j++) {
+    for (int j = 0; j < (int)schedule[i].size(); j++) {
       // Scale the recipe to the planned target servings
       Recipe scaledRecipe = schedule[i][j].recipe.scaleServings(schedule[i][j].targetServings);
       vector<Ingredient> ings = scaledRecipe.getIngredients();
-      for (int k = 0; k < ings.size(); k++) {
+      for (int k = 0; k < (int)ings.size(); k++) {
         string ingName = ings[k].getName();
         string ingUnit = ings[k].getUnit();
+        transform(ingName.begin(), ingName.end(), ingName.begin(), ::tolower);
+        transform(ingUnit.begin(), ingUnit.end(), ingUnit.begin(), ::tolower);
         double ingQty = ings[k].getQuantity();
 
         // Check if this name+unit combo already exists
         bool found = false;
-        for (int m = 0; m < names.size(); m++) {
+        for (int m = 0; m < (int)names.size(); m++) {
           if (names[m] == ingName && units[m] == ingUnit) {
             quantities[m] += ingQty;
             found = true;
@@ -106,30 +159,27 @@ void WeeklyMenu::generateShoppingList(Pantry& pantry) {
     }
   }
 
-  // Subtract pantry quantities from gross requirements
-  for (int i = 0; i < names.size(); i++) {
-    double have = pantry.getQuantity(names[i], units[i]);
-    quantities[i] -= have;
-  }
-
-  // Remove items that are fully covered by the pantry (quantity <= 0)
-  for (int i = 0; i < names.size(); ) {
-    if (quantities[i] <= 0) {
-      names.erase(names.begin() + i);
-      quantities.erase(quantities.begin() + i);
-      units.erase(units.begin() + i);
-    } else {
-      i++;
-    }
-  }
-
   cout << "==========================================" << endl;
   cout << "         SHOPPING LIST" << endl;
   cout << "==========================================" << endl;
 
+  ofstream outFile("shopping_list.txt");
+  bool canWrite = outFile.is_open();
+
+  if (canWrite) {
+    outFile << "==========================================" << endl;
+    outFile << "         SHOPPING LIST" << endl;
+    outFile << "==========================================" << endl;
+  }
+
   if (names.empty()) {
     cout << "  Nothing to buy - pantry has everything!" << endl;
     cout << "==========================================" << endl;
+    if (canWrite) {
+      outFile << "  Nothing to buy - pantry has everything!" << endl;
+      outFile << "==========================================" << endl;
+      outFile.close();
+    }
     return;
   }
 
@@ -167,10 +217,21 @@ void WeeklyMenu::generateShoppingList(Pantry& pantry) {
   cout.width(qtyWidth);  cout << left << "Quantity";
   cout << "Unit" << endl;
 
+  if (canWrite) {
+    outFile << "  ";
+    outFile.width(nameWidth); outFile << left << "Name";
+    outFile.width(qtyWidth);  outFile << left << "Quantity";
+    outFile << "Unit" << endl;
+  }
+
   cout << "  ";
-  for (int i = 0; i < nameWidth + qtyWidth + unitWidth; i++)
+  if (canWrite) outFile << "  ";
+  for (int i = 0; i < nameWidth + qtyWidth + unitWidth; i++) {
     cout << "-";
+    if (canWrite) outFile << "-";
+  }
   cout << endl;
+  if (canWrite) outFile << endl;
 
   // Print rows
   for (int i = 0; i < names.size(); i++) {
@@ -188,9 +249,21 @@ void WeeklyMenu::generateShoppingList(Pantry& pantry) {
     cout.width(nameWidth); cout << left << names[i];
     cout.width(qtyWidth);  cout << left << qtyStr;
     cout << units[i] << endl;
+
+    if (canWrite) {
+      outFile << "  ";
+      outFile.width(nameWidth); outFile << left << names[i];
+      outFile.width(qtyWidth);  outFile << left << qtyStr;
+      outFile << units[i] << endl;
+    }
   }
 
   cout << "==========================================" << endl;
+  if (canWrite) {
+    outFile << "==========================================" << endl;
+    outFile.close();
+    cout << "  [Exported to shopping_list.txt successfully!]" << endl;
+  }
 }
 
 void WeeklyMenu::clearDay(string day) {

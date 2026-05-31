@@ -5,9 +5,10 @@
 #include <vector>
 
 #include "Recipe.h"
-#include "Pantry.h"
 
 using namespace std;
+
+class RecipeManager;
 
 class WeeklyMenu {
 public:
@@ -32,8 +33,11 @@ public:
   string getDayName(int index);
   int getDaysCount();
 
+  void saveToFile(string filename);
+  void loadFromFile(string filename, RecipeManager& mgr);
+
   void displayWeeklyPlan();
-  void generateShoppingList(Pantry& pantry);
+  void generateShoppingList();
   void clearDay(string day);
   void clearAll();
 };

@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall
 
 SRC_DIR = src
-SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/Ingredient.cpp $(SRC_DIR)/RecipeBase.cpp $(SRC_DIR)/Recipe.cpp $(SRC_DIR)/RecipeManager.cpp $(SRC_DIR)/WeeklyMenu.cpp $(SRC_DIR)/Pantry.cpp
+SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/Ingredient.cpp $(SRC_DIR)/RecipeBase.cpp $(SRC_DIR)/Recipe.cpp $(SRC_DIR)/RecipeManager.cpp $(SRC_DIR)/WeeklyMenu.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = recipe_manager
 

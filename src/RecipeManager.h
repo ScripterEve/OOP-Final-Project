@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "Recipe.h"
-#include "Pantry.h"
 #include "Exceptions.h"
 
 using namespace std;
@@ -30,7 +29,6 @@ public:
   vector<Recipe> getByTime();
 
   void displayStats();
-  void suggestRecipes(Pantry& pantry);
   void saveToFile(string filename);
   void loadFromFile(string filename);
 };

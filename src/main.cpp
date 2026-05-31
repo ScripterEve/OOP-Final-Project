@@ -6,7 +6,6 @@
 #include "Recipe.h"
 #include "RecipeManager.h"
 #include "WeeklyMenu.h"
-#include "Pantry.h"
 // Custom exceptions for error handling
 #include "Exceptions.h"
 
@@ -32,7 +31,6 @@ void displayList(vector<Recipe> list) {
 int main() {
   RecipeManager mgr;
   WeeklyMenu menu;
-  Pantry pantry;
   string dataFile = "recipes.txt";
   try {
     mgr.loadFromFile(dataFile);
@@ -40,8 +38,11 @@ int main() {
     cout << "Warning: " << e.what() << endl;
   }
 
-
-
+  try {
+    menu.loadFromFile("weekly_plan.txt", mgr);
+  } catch (const exception& e) {
+    cout << "Warning loading weekly plan: " << e.what() << endl;
+  }
   auto readInt = [](string prompt) -> int {
     int val;
     while (true) {
@@ -74,6 +75,30 @@ int main() {
     }
   };
 
+  auto selectRecipeInteractive = [&mgr, &readInt](string action) -> Recipe* {
+    string query;
+    cout << "Enter part of the recipe name to " << action << ": ";
+    getline(cin, query);
+    vector<Recipe> matches = mgr.searchByName(query);
+    if (matches.empty()) {
+      cout << "No recipes match that query." << endl;
+      return nullptr;
+    }
+    if (matches.size() == 1) {
+      cout << "Automatically selected: " << matches[0].getName() << endl;
+      return mgr.getRecipe(matches[0].getName());
+    }
+    cout << "Multiple recipes found:" << endl;
+    displayList(matches);
+    int choice;
+    while (true) {
+      choice = readInt("Enter the number of the recipe you want to select: ");
+      if (choice >= 1 && choice <= (int)matches.size()) break;
+      cout << "Invalid number. Please try again." << endl;
+    }
+    return mgr.getRecipe(matches[choice - 1].getName());
+  };
+
   int choice;
   string input;
 
@@ -100,10 +125,7 @@ int main() {
     cout << "16. Plan weekly menu" << endl;
     cout << "17. View weekly plan" << endl;
     cout << "18. Generate shopping list" << endl;
-    cout << "19. Add to pantry" << endl;
-    cout << "20. View pantry" << endl;
-    cout << "21. Suggest recipes from pantry" << endl;
-    cout << "22. Sort by prep time" << endl;
+    cout << "19. Sort by prep time" << endl;
     cout << " 0. Exit" << endl;
     cout << "==========================================" << endl;
     cout << "Choice: ";
@@ -159,26 +181,17 @@ int main() {
       cout << "Recipe added!" << endl;
 
     } else if (choice == 3) {
-      cout << "Name: "; getline(cin, input);
-      mgr.removeRecipe(input);
-      mgr.saveToFile(dataFile);
-      cout << "Deleted." << endl;
+      Recipe* r = selectRecipeInteractive("delete");
+      if (r) {
+        mgr.removeRecipe(r->getName());
+        mgr.saveToFile(dataFile);
+        cout << "Deleted." << endl;
+      }
 
     } else if (choice == 4) {
-      vector<Recipe>& allRecipes = mgr.getAllRecipes();
-      if (allRecipes.empty()) {
-        cout << "No recipes available." << endl;
-      } else {
-        displayList(allRecipes);
-        int recipeChoice;
-        while (true) {
-          recipeChoice = readInt("Select recipe number: ");
-          if (recipeChoice >= 1 && recipeChoice <= (int)allRecipes.size()) {
-            break;
-          }
-          cout << "Invalid number. Please try again." << endl;
-        }
-        allRecipes[recipeChoice - 1].display();
+      Recipe* r = selectRecipeInteractive("view details");
+      if (r) {
+        r->display();
       }
 
     } else if (choice == 5) {
@@ -238,30 +251,33 @@ int main() {
       }
 
     } else if (choice == 9) {
-      cout << "Name: "; getline(cin, input);
-      Recipe* r = mgr.getRecipe(input);
-      int ns = readInt("New servings: ");
-      Recipe scaled = r->scaleServings(ns);
-      scaled.display();
+      Recipe* r = selectRecipeInteractive("scale servings");
+      if (r) {
+        int ns = readInt("New servings: ");
+        Recipe scaled = r->scaleServings(ns);
+        scaled.display();
+      }
 
     } else if (choice == 10) {
-      cout << "Name: "; getline(cin, input);
-      Recipe* r = mgr.getRecipe(input);
-      int rat = readInt("Rating (1-5): ");
-      if (rat >= 1 && rat <= 5) {
-        r->setRating(rat);
-        mgr.saveToFile(dataFile);
-        cout << "Rated!" << endl;
-      } else {
-        cout << "Invalid rating." << endl;
+      Recipe* r = selectRecipeInteractive("rate");
+      if (r) {
+        int rat = readInt("Rating (1-5): ");
+        if (rat >= 1 && rat <= 5) {
+          r->setRating(rat);
+          mgr.saveToFile(dataFile);
+          cout << "Rated!" << endl;
+        } else {
+          cout << "Invalid rating." << endl;
+        }
       }
 
     } else if (choice == 11) {
-      cout << "Name: "; getline(cin, input);
-      Recipe* r = mgr.getRecipe(input);
-      r->toggleFavorite();
-      mgr.saveToFile(dataFile);
-      cout << "Toggled." << endl;
+      Recipe* r = selectRecipeInteractive("toggle favorite status");
+      if (r) {
+        r->toggleFavorite();
+        mgr.saveToFile(dataFile);
+        cout << "Toggled." << endl;
+      }
 
     } else if (choice == 12) {
       displayList(mgr.getFavorites());
@@ -270,11 +286,12 @@ int main() {
       displayList(mgr.getByRating());
 
     } else if (choice == 14) {
-      cout << "Name: "; getline(cin, input);
-      Recipe* r = mgr.getRecipe(input);
-      string fn;
-      cout << "Filename (e.g. export.txt): "; getline(cin, fn);
-      r->exportToFile(fn);
+      Recipe* r = selectRecipeInteractive("export");
+      if (r) {
+        string fn;
+        cout << "Filename (e.g. export.txt): "; getline(cin, fn);
+        r->exportToFile(fn);
+      }
 
     } else if (choice == 15) {
       mgr.displayStats();
@@ -289,27 +306,15 @@ int main() {
         cout << "Invalid day." << endl;
       } else {
         string selectedDay = menu.getDayName(dayChoice - 1);
-        cout << endl << "Available recipes:" << endl;
-        vector<Recipe>& allRecipes = mgr.getAllRecipes();
-        if (allRecipes.empty()) {
-          cout << "No recipes available. Add some first!" << endl;
-        } else {
-          for (int i = 0; i < allRecipes.size(); i++) {
-            cout << "  " << (i + 1) << ". " << allRecipes[i].getName()
-                 << " [" << allRecipes[i].getCategory() << "]" << endl;
-          }
-          int recipeChoice = readInt("Select recipe: ");
-          if (recipeChoice < 1 || recipeChoice > (int)allRecipes.size()) {
-            cout << "Invalid selection." << endl;
+        Recipe* r = selectRecipeInteractive("plan for " + selectedDay);
+        if (r) {
+          int servings = readInt("For how many servings are you planning this meal? ");
+          if (servings > 0) {
+            menu.addRecipeToDay(selectedDay, *r, servings);
+            menu.saveToFile("weekly_plan.txt");
+            cout << "Added \"" << r->getName() << "\" (" << servings << " servings) to " << selectedDay << "!" << endl;
           } else {
-            int servings = readInt("For how many servings are you planning this meal? ");
-            if (servings > 0) {
-              menu.addRecipeToDay(selectedDay, allRecipes[recipeChoice - 1], servings);
-              cout << "Added \"" << allRecipes[recipeChoice - 1].getName()
-                   << "\" (" << servings << " servings) to " << selectedDay << "!" << endl;
-            } else {
-              cout << "Invalid servings." << endl;
-            }
+            cout << "Invalid servings." << endl;
           }
         }
       }
@@ -318,24 +323,9 @@ int main() {
       menu.displayWeeklyPlan();
 
     } else if (choice == 18) {
-      menu.generateShoppingList(pantry);
+      menu.generateShoppingList();
 
     } else if (choice == 19) {
-      // Add to pantry
-      string iname, unit;
-      cout << "Ingredient name: "; getline(cin, iname);
-      double qty = readDouble("Quantity: ");
-      cout << "Unit: "; getline(cin, unit);
-      pantry.addItem(iname, qty, unit);
-      cout << "Added " << qty << " " << unit << " of " << iname << " to pantry!" << endl;
-
-    } else if (choice == 20) {
-      pantry.displayPantry();
-
-    } else if (choice == 21) {
-      mgr.suggestRecipes(pantry);
-
-    } else if (choice == 22) {
       cout << "Recipes sorted by estimated prep time:" << endl;
       displayList(mgr.getByTime());
 

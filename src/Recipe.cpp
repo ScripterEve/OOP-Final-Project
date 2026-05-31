@@ -113,7 +113,11 @@ void Recipe::exportToFile(string filename) {
     cout << "Error opening file." << endl;
     return;
   }
-  file << name << endl;
+  if (favorite) {
+    file << name << " [FAV]" << endl;
+  } else {
+    file << name << endl;
+  }
   file << "Category: " << category << endl;
   file << "Servings: " << servings << endl;
   if (rating > 0)
