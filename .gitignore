@@ -3,3 +3,4 @@ recipes.txt
 .vscode/
 
 *.o
+*.txt

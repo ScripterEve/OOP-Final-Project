@@ -126,6 +126,7 @@ int main() {
     cout << "17. View weekly plan" << endl;
     cout << "18. Generate shopping list" << endl;
     cout << "19. Sort by prep time" << endl;
+    cout << "20. Update a recipe" << endl;
     cout << " 0. Exit" << endl;
     cout << "==========================================" << endl;
     cout << "Choice: ";
@@ -328,6 +329,79 @@ int main() {
     } else if (choice == 19) {
       cout << "Recipes sorted by estimated prep time:" << endl;
       displayList(mgr.getByTime());
+
+    } else if (choice == 20) {
+      Recipe* r = selectRecipeInteractive("update");
+      if (r) {
+        int subChoice;
+        do {
+          cout << endl << "==========================================" << endl;
+          cout << "       UPDATE RECIPE: " << r->getName() << endl;
+          cout << "==========================================" << endl;
+          cout << " 1. Edit Name" << endl;
+          cout << " 2. Edit Category" << endl;
+          cout << " 3. Edit Default Servings" << endl;
+          cout << " 4. Add Ingredient" << endl;
+          cout << " 5. Remove Ingredient" << endl;
+          cout << " 6. Add Step" << endl;
+          cout << " 7. Remove Step" << endl;
+          cout << " 8. Add Tag" << endl;
+          cout << " 0. Finish Editing" << endl;
+          cout << "==========================================" << endl;
+          subChoice = readInt("Choice: ");
+
+          if (subChoice == 1) {
+            string name;
+            cout << "New name: "; getline(cin, name);
+            if (!name.empty()) r->setName(name);
+            cout << "Name updated." << endl;
+          } else if (subChoice == 2) {
+            string cat;
+            cout << "New category: "; getline(cin, cat);
+            if (!cat.empty()) r->setCategory(cat);
+            cout << "Category updated." << endl;
+          } else if (subChoice == 3) {
+            int srv = readInt("New default servings: ");
+            r->setServings(srv);
+            cout << "Servings updated." << endl;
+          } else if (subChoice == 4) {
+            string iName, unit;
+            cout << "Ingredient name: "; getline(cin, iName);
+            double qty = readDouble("Quantity: ");
+            cout << "Unit: "; getline(cin, unit);
+            double cal = readDouble("Calories: ");
+            double prot = readDouble("Protein (g): ");
+            double carbs = readDouble("Carbs (g): ");
+            double fat = readDouble("Fat (g): ");
+            r->addIngredient(Ingredient(iName, qty, unit, cal, prot, carbs, fat));
+            cout << "Ingredient added." << endl;
+          } else if (subChoice == 5) {
+            string iName;
+            cout << "Name of ingredient to remove: "; getline(cin, iName);
+            r->removeIngredient(iName);
+            cout << "Ingredient removed (if it existed)." << endl;
+          } else if (subChoice == 6) {
+            string step;
+            cout << "New step: "; getline(cin, step);
+            if (!step.empty()) r->addStep(step);
+            cout << "Step added." << endl;
+          } else if (subChoice == 7) {
+            int idx = readInt("Index of step to remove (1-based): ");
+            r->removeStep(idx - 1);
+            cout << "Step removed (if index was valid)." << endl;
+          } else if (subChoice == 8) {
+            string tag;
+            cout << "New tag: "; getline(cin, tag);
+            if (!tag.empty()) r->addTag(tag);
+            cout << "Tag added." << endl;
+          } else if (subChoice != 0) {
+            cout << "Invalid choice." << endl;
+          }
+        } while (subChoice != 0);
+        
+        mgr.saveToFile(dataFile);
+        cout << "Recipe updated and saved successfully!" << endl;
+      }
 
     } else if (choice != 0) {
       cout << "Invalid choice." << endl;
