@@ -4,8 +4,15 @@ Console C++ application for managing recipes.
 
 ## Build and Run
 
+```bash
+make
+./recipe_manager
 ```
-g++ -std=c++17 -o recipe_manager src/main.cpp
+
+Alternatively, you can compile it manually:
+
+```bash
+g++ -std=c++17 -o recipe_manager src/*.cpp
 ./recipe_manager
 ```
 
