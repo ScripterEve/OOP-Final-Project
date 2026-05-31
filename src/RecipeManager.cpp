@@ -241,6 +241,9 @@ void RecipeManager::suggestRecipes(Pantry& pantry) {
 
 void RecipeManager::saveToFile(string filename) {
   ofstream file(filename);
+  if (!file.is_open()) {
+    throw FileLoadException("Failed to open file for saving: " + filename);
+  }
   for (int i = 0; i < recipes.size(); i++) {
     file << "---" << endl;
     file << recipes[i].getName() << endl;

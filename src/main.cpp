@@ -40,39 +40,7 @@ int main() {
     cout << "Warning: " << e.what() << endl;
   }
 
-  if (mgr.getCount() == 0) {
-    Recipe r1("Shopska salad", 4, "salad");
-    r1.addIngredient(Ingredient("tomatoes", 4, "pcs", 22, 1.1, 4.8, 0.2));
-    r1.addIngredient(Ingredient("cucumbers", 2, "pcs", 16, 0.7, 3.6, 0.1));
-    r1.addIngredient(Ingredient("cheese", 200, "g", 264, 17.5, 1.3, 21.3));
-    r1.addStep("Chop the tomatoes and cucumbers");
-    r1.addStep("Add cheese on top");
-    r1.addTag("vegetarian");
-    r1.addTag("quick");
-    r1.setRating(5);
-    mgr.addRecipe(r1);
 
-    Recipe r2("Chicken with rice", 2, "main");
-    r2.addIngredient(Ingredient("chicken breast", 400, "g", 440, 92, 0, 4));
-    r2.addIngredient(Ingredient("rice", 200, "g", 260, 5.3, 56, 0.6));
-    r2.addIngredient(Ingredient("butter", 30, "g", 215, 0.1, 0, 24));
-    r2.addStep("Boil the rice");
-    r2.addStep("Fry the chicken");
-    r2.addStep("Mix and serve");
-    r2.addTag("quick");
-    r2.setRating(4);
-    mgr.addRecipe(r2);
-
-    Recipe r3("Banana smoothie", 1, "drink");
-    r3.addIngredient(Ingredient("bananas", 2, "pcs", 178, 2.2, 46, 0.6));
-    r3.addIngredient(Ingredient("milk", 300, "ml", 186, 10.2, 14.4, 9.6));
-    r3.addStep("Peel the bananas");
-    r3.addStep("Blend everything");
-    r3.addTag("vegetarian");
-    r3.addTag("dessert");
-    r3.setRating(3);
-    mgr.addRecipe(r3);
-  }
 
   auto readInt = [](string prompt) -> int {
     int val;
@@ -187,11 +155,13 @@ int main() {
       }
 
       mgr.addRecipe(r);
+      mgr.saveToFile(dataFile);
       cout << "Recipe added!" << endl;
 
     } else if (choice == 3) {
       cout << "Name: "; getline(cin, input);
       mgr.removeRecipe(input);
+      mgr.saveToFile(dataFile);
       cout << "Deleted." << endl;
 
     } else if (choice == 4) {
@@ -280,6 +250,7 @@ int main() {
       int rat = readInt("Rating (1-5): ");
       if (rat >= 1 && rat <= 5) {
         r->setRating(rat);
+        mgr.saveToFile(dataFile);
         cout << "Rated!" << endl;
       } else {
         cout << "Invalid rating." << endl;
@@ -289,6 +260,7 @@ int main() {
       cout << "Name: "; getline(cin, input);
       Recipe* r = mgr.getRecipe(input);
       r->toggleFavorite();
+      mgr.saveToFile(dataFile);
       cout << "Toggled." << endl;
 
     } else if (choice == 12) {
